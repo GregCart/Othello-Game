@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading.Tasks;
 using UnityEngine;
 using static OthelloModel;
 
@@ -51,7 +52,52 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 
     public void ChangeSquare(Point loc, PlayerColor c)
     {
+        GameObject go = this.GameBoard[loc.X, loc.Y];
 
+        if (go != null)
+        {
+            if (c == PlayerColor.White && go.transform.rotation == Quaternion.AngleAxis(0, Vector3.right))
+            {
+                go.transform.RotateAround(Vector3.right, (float)Math.PI);
+            } else if (c == PlayerColor.Black && go.transform.rotation == Quaternion.AngleAxis((float)Math.PI, Vector3.right))
+            {
+                go.transform.RotateAround(Vector3.right, 0);
+            }
+            //PieceAnimationQueue.Enqueue((new Vector3(loc.X, loc.Y, 1), GamePieces[NextGamePiece].gameObject.transform.position, GamePieces[NextGamePiece]));
+        }
+    }
+
+    private IEnumerator SpawnBoardAfterTimer()
+    {
+        yield return new WaitForSeconds(5);
+
+        for (int i = 0; i < 64; i++)
+        {
+            float x = i % 2 == 1 ? RightGamePieceStorage.gameObject.transform.position.x : LeftGamePieceStorage.gameObject.transform.position.x;
+            float z = i % 2 == 1 ? RightGamePieceStorage.gameObject.transform.position.z : LeftGamePieceStorage.gameObject.transform.position.z;
+            Quaternion rotation = Quaternion.AngleAxis((float)((Math.PI * i) % (2 * Math.PI)), Vector3.right);
+
+            GameObject piece = Instantiate(GamePiece, new Vector3(x, 64 + i * 2 + (float)(rnd.NextDouble() / 20), z), rotation);
+
+            GamePieces.Add(piece);
+        }
+
+        PrepNextPiece();
+    }
+
+    private void PrepNextPiece()
+    {
+        if (NextGamePiece % 2 == 1)
+        {
+            Vector3 location = new Vector3(8.5f, 1.5f, 0);
+
+            PieceAnimationQueue.Enqueue((location, GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
+        } else
+        {
+            Vector3 location = new Vector3(-8.5f, 1.5f, 0);
+
+            PieceAnimationQueue.Enqueue((location, GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
+        }
     }
 
 
@@ -61,15 +107,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         GameBoard = new GameObject[8, 8];
         GamePieces = new List<GameObject>();
 
-        for (int i = 0; i < 64; i++)
-        {
-            float x = i % 2 == 1 ? RightGamePieceStorage.gameObject.transform.position.x : LeftGamePieceStorage.gameObject.transform.position.x;
-            float z = i % 2 == 1 ? RightGamePieceStorage.gameObject.transform.position.z : LeftGamePieceStorage.gameObject.transform.position.z;
-
-            GameObject piece = Instantiate(GamePiece, new Vector3(x, 64 + i * 2 + (float)(rnd.NextDouble() / 20), z), Quaternion.identity);
-
-            GamePieces.Add(piece);
-        }
+        StartCoroutine(SpawnBoardAfterTimer());
     }
 
     // Update is called once per frame
