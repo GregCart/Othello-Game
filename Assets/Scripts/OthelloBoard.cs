@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using UnityEngine;
 using static OthelloModel;
 
@@ -23,6 +24,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     public Vector3 AnimationStart;
     public Vector3 AnimationEnd;
     public float AnimationTime;
+    public int BoardSize = 8;
     public Queue<(Vector3 largest, Vector3 source, GameObject piece)> PieceAnimationQueue;
 
 
@@ -46,7 +48,15 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         }
         else if (value.Type == ChangeType.BoardReset)
         {
-            //clear board, send message that baord is clear
+            for (int x = 0; x < BoardSize; x++)
+            {
+                for (int y = 0; y < BoardSize; y++)
+                {
+                    Destroy(GameBoard[x, y]);
+                }
+            }
+
+            StartCoroutine(SpawnBoardAfterTimer());
         }
     }
 
@@ -56,20 +66,29 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 
         if (go != null)
         {
-            if (c == PlayerColor.White && go.transform.rotation == Quaternion.AngleAxis(0, Vector3.right))
+            //go = go.transform.GetChild(0).gameObject;
+            if (c == PlayerColor.White)
             {
-                go.transform.RotateAround(Vector3.right, (float)Math.PI);
-            } else if (c == PlayerColor.Black && go.transform.rotation == Quaternion.AngleAxis((float)Math.PI, Vector3.right))
+                go.GetComponent<AnimatedRotation>().SetDirection(Vector3.up);
+            } else if (c == PlayerColor.Black)
             {
-                go.transform.RotateAround(Vector3.right, 0);
+                go.GetComponent<AnimatedRotation>().SetDirection(Vector3.down);
+            } else if (c == PlayerColor.Empty)
+            {
+                Destroy(go);
             }
-            //PieceAnimationQueue.Enqueue((new Vector3(loc.X, loc.Y, 1), GamePieces[NextGamePiece].gameObject.transform.position, GamePieces[NextGamePiece]));
+        } else
+        {
+            this.GameBoard[loc.X, loc.Y] = GamePieces[NextGamePiece];
+            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) - .5), 2f, (float)(loc.Y - (BoardSize / 2) - .5)), GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
+            ChangeSquare(loc, c);
+            NextGamePiece++;
         }
     }
 
     private IEnumerator SpawnBoardAfterTimer()
     {
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(2);
 
         for (int i = 0; i < 64; i++)
         {
@@ -82,7 +101,16 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
             GamePieces.Add(piece);
         }
 
+        yield return new WaitForSeconds(3);
+
         PrepNextPiece();
+        ChangeSquare(new Point(4, 4), PlayerColor.Black);
+        PrepNextPiece();
+        ChangeSquare(new Point(4, 5), PlayerColor.White);
+        PrepNextPiece();
+        ChangeSquare(new Point(5, 5), PlayerColor.Black);
+        PrepNextPiece();
+        ChangeSquare(new Point(5, 4), PlayerColor.White);
     }
 
     private void PrepNextPiece()
@@ -104,8 +132,9 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     // Start is called before the first frame update
     void Start()
     {
-        GameBoard = new GameObject[8, 8];
+        GameBoard = new GameObject[BoardSize, BoardSize];
         GamePieces = new List<GameObject>();
+        PieceAnimationQueue = new Queue<(Vector3 largest, Vector3 source, GameObject piece)>();
 
         StartCoroutine(SpawnBoardAfterTimer());
     }

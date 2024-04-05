@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.17276844, g: 0.21589245, b: 0.2978263, a: 1}
+  m_IndirectSpecularColor: {r: 0.17276807, g: 0.21589197, b: 0.29782572, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -394,6 +394,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 100000, guid: 97a23aa5bdc934073b41a2d021ba89c3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1892414123}
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: 97a23aa5bdc934073b41a2d021ba89c3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1892414127}
   m_SourcePrefab: {fileID: 100100000, guid: 97a23aa5bdc934073b41a2d021ba89c3, type: 3}
 --- !u!1 &1892414122 stripped
 GameObject:
@@ -412,9 +415,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2693079a2981e1141b158c4a7ee8d720, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GamePiece: {fileID: 4584050692084896751, guid: e26661068a6d98140b1d28b990f55d80, type: 3}
-  TransparentGamePiece: {fileID: 4584050692084896751, guid: e26661068a6d98140b1d28b990f55d80, type: 3}
-  MoveFollowPiece: {fileID: 4584050692084896751, guid: e26661068a6d98140b1d28b990f55d80, type: 3}
+  GamePiece: {fileID: 886119997252447041, guid: be6091665a70db54f90da6dd71b1429d, type: 3}
+  TransparentGamePiece: {fileID: 886119997252447041, guid: be6091665a70db54f90da6dd71b1429d, type: 3}
+  MoveFollowPiece: {fileID: 886119997252447041, guid: be6091665a70db54f90da6dd71b1429d, type: 3}
   LeftGamePieceStorage: {fileID: 286336950}
   RightGamePieceStorage: {fileID: 487223867}
   GamePieces: []
@@ -424,6 +427,28 @@ MonoBehaviour:
   AnimationStart: {x: 0, y: 0, z: 0}
   AnimationEnd: {x: 0, y: 0, z: 0}
   AnimationTime: 0
+  BoardSize: 8
+--- !u!65 &1892414127
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1892414122}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 9, y: 1, z: 9}
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1001 &2008148062
 PrefabInstance:
   m_ObjectHideFlags: 0
