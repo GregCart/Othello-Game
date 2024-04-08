@@ -17,6 +17,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     public GameObject RightGamePieceStorage;
     public List<GameObject> GamePieces;
     public GameObject[,] GameBoard;
+    public GameObject Board;
     public System.Random rnd = new System.Random();
     public int NextGamePiece = 0;
     public bool AnimationCurrent = false;
@@ -80,7 +81,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         } else
         {
             this.GameBoard[loc.X, loc.Y] = GamePieces[NextGamePiece];
-            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) - .5), 2f, (float)(loc.Y - (BoardSize / 2) - .5)), GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
+            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) - .5), Board.transform.position.y + .5f, (float)(loc.Y - (BoardSize / 2) - .5)), GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
             ChangeSquare(loc, c);
             NextGamePiece++;
         }
@@ -88,7 +89,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 
     private IEnumerator SpawnBoardAfterTimer()
     {
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(1);
 
         for (int i = 0; i < 64; i++)
         {
@@ -96,12 +97,12 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
             float z = i % 2 == 1 ? RightGamePieceStorage.gameObject.transform.position.z : LeftGamePieceStorage.gameObject.transform.position.z;
             Quaternion rotation = Quaternion.AngleAxis((float)((Math.PI * i) % (2 * Math.PI)), Vector3.right);
 
-            GameObject piece = Instantiate(GamePiece, new Vector3(x, 64 + i * 2 + (float)(rnd.NextDouble() / 20), z), rotation);
+            GameObject piece = Instantiate(GamePiece, new Vector3(x, 10 + i * 2 + (float)(rnd.NextDouble() / 20), z), rotation);
 
             GamePieces.Add(piece);
         }
 
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(7);
 
         PrepNextPiece();
         ChangeSquare(new Point(4, 4), PlayerColor.Black);
@@ -117,12 +118,12 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     {
         if (NextGamePiece % 2 == 1)
         {
-            Vector3 location = new Vector3(8.5f, 1.5f, 0);
+            Vector3 location = new Vector3(8f, Board.transform.position.y + .5f, 0);
 
             PieceAnimationQueue.Enqueue((location, GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
         } else
         {
-            Vector3 location = new Vector3(-8.5f, 1.5f, 0);
+            Vector3 location = new Vector3(-8f, Board.transform.position.y + .5f, 0);
 
             PieceAnimationQueue.Enqueue((location, GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
         }
