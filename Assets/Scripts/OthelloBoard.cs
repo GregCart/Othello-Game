@@ -81,7 +81,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         } else
         {
             this.GameBoard[loc.X, loc.Y] = GamePieces[NextGamePiece];
-            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) - .5), Board.transform.position.y + .5f, (float)(loc.Y - (BoardSize / 2) - .5)), GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
+            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) - .5), Board.transform.position.y + 1f, (float)(loc.Y - (BoardSize / 2) - .5)), GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
             ChangeSquare(loc, c);
             NextGamePiece++;
         }
@@ -106,24 +106,24 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 
         PrepNextPiece();
         ChangeSquare(new Point(4, 4), PlayerColor.Black);
-        PrepNextPiece();
+        /*PrepNextPiece();
         ChangeSquare(new Point(4, 5), PlayerColor.White);
         PrepNextPiece();
         ChangeSquare(new Point(5, 5), PlayerColor.Black);
         PrepNextPiece();
-        ChangeSquare(new Point(5, 4), PlayerColor.White);
+        ChangeSquare(new Point(5, 4), PlayerColor.White);*/
     }
 
     private void PrepNextPiece()
     {
         if (NextGamePiece % 2 == 1)
         {
-            Vector3 location = new Vector3(8f, Board.transform.position.y + .5f, 0);
+            Vector3 location = new Vector3(6.75f, Board.transform.position.y + 1.5f, 0);
 
             PieceAnimationQueue.Enqueue((location, GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
         } else
         {
-            Vector3 location = new Vector3(-8f, Board.transform.position.y + .5f, 0);
+            Vector3 location = new Vector3(-6.75f, Board.transform.position.y + 1.5f, 0);
 
             PieceAnimationQueue.Enqueue((location, GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
         }
@@ -154,7 +154,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         if (!AnimationCurrent) return;
 
         AnimationTime += Time.deltaTime;
-        if (AnimationTime > 1)
+        if (AnimationPiece.transform.position.)
         {
             AnimationCurrent = false;
             AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
