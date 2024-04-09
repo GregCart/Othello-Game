@@ -10,6 +10,8 @@ using static OthelloModel;
 
 public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 {
+    private enum AnimationType { Direct, Arc, Rotation }
+
     public GameObject GamePiece;
     public GameObject TransparentGamePiece;
     public GameObject MoveFollowPiece;
@@ -20,13 +22,17 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     public GameObject Board;
     public System.Random rnd = new System.Random();
     public int NextGamePiece = 0;
-    public bool AnimationCurrent = false;
+    public bool AnimationCurrent = false, AnimationStarted = false;
     public GameObject AnimationPiece;
     public Vector3 AnimationStart;
     public Vector3 AnimationEnd;
     public float AnimationTime;
     public int BoardSize = 8;
-    public Queue<(Vector3 largest, Vector3 source, GameObject piece)> PieceAnimationQueue;
+
+    [SerializeField]
+    private Queue<(Vector3 target, AnimationType type, GameObject piece)> PieceAnimationQueue;
+    [SerializeField]
+    private AnimationType AType;
 
 
     public void OnCompleted()
@@ -67,7 +73,6 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 
         if (go != null)
         {
-            //go = go.transform.GetChild(0).gameObject;
             if (c == PlayerColor.White)
             {
                 go.GetComponent<AnimatedRotation>().SetDirection(Vector3.up);
@@ -81,9 +86,45 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         } else
         {
             this.GameBoard[loc.X, loc.Y] = GamePieces[NextGamePiece];
-            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) - .5), Board.transform.position.y + 1f, (float)(loc.Y - (BoardSize / 2) - .5)), GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
+            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) - .5f), 
+                                        Board.transform.position.y + 500f, 
+                                        (float)(loc.Y - (BoardSize / 2) - .5f))
+                                        , AnimationType.Arc
+                                        , GamePieces[NextGamePiece]));
             ChangeSquare(loc, c);
             NextGamePiece++;
+        }
+
+        AdjustEntireBoard();
+    }
+
+    private void AdjustEntireBoard()
+    {
+        for (int x = 0; x < BoardSize; x++)
+        {
+            for (int y = 0; y < BoardSize; y++)
+            {
+                AdjustPieceAt(new Point(x, y));
+            }
+        }
+    }
+
+    private void AdjustPieceAt(Point pos)
+    {
+        GameObject go = GameBoard[pos.X, pos.Y];
+
+        if (go != null)
+        {
+            Vector3 CorrectPos = new Vector3((float)(pos.X - (BoardSize / 2) - .5),
+                                                (float)(go.transform.position.y + 2f),
+                                                (float)(pos.Y - (BoardSize / 2) - .5));
+
+            PieceAnimationQueue.Enqueue((CorrectPos, AnimationType.Direct, go));
+
+            AnimatedRotation rot = go.GetComponent<AnimatedRotation>();
+            rot.Duration = .5f;
+
+            PieceAnimationQueue.Enqueue((rot.LastDirection, AnimationType.Rotation, go));
         }
     }
 
@@ -106,27 +147,41 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 
         PrepNextPiece();
         ChangeSquare(new Point(4, 4), PlayerColor.Black);
-        /*PrepNextPiece();
+        PrepNextPiece();
         ChangeSquare(new Point(4, 5), PlayerColor.White);
         PrepNextPiece();
         ChangeSquare(new Point(5, 5), PlayerColor.Black);
         PrepNextPiece();
-        ChangeSquare(new Point(5, 4), PlayerColor.White);*/
+        ChangeSquare(new Point(5, 4), PlayerColor.White);
     }
 
     private void PrepNextPiece()
     {
         if (NextGamePiece % 2 == 1)
         {
-            Vector3 location = new Vector3(6.75f, Board.transform.position.y + 1.5f, 0);
+            Vector3 location = new Vector3(6.75f, Board.transform.position.y + .75f, 0);
 
-            PieceAnimationQueue.Enqueue((location, GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
+            PieceAnimationQueue.Enqueue((location, AnimationType.Direct, GamePieces[NextGamePiece]));
         } else
         {
-            Vector3 location = new Vector3(-6.75f, Board.transform.position.y + 1.5f, 0);
+            Vector3 location = new Vector3(-6.75f, Board.transform.position.y + .75f, 0);
 
-            PieceAnimationQueue.Enqueue((location, GamePieces[NextGamePiece].transform.position, GamePieces[NextGamePiece]));
+            PieceAnimationQueue.Enqueue((location, AnimationType.Direct, GamePieces[NextGamePiece]));
         }
+    }
+
+    private IEnumerator AnimateNext()
+    {
+        AnimationStarted = true;
+
+        yield return new WaitForSeconds(.35f);
+
+        (AnimationEnd, AType, AnimationPiece) = PieceAnimationQueue.Dequeue();
+        AnimationPiece.GetComponent<Rigidbody>().isKinematic = true;
+        AnimationStart = AnimationPiece.transform.localPosition;
+        AnimationTime = -0.0f;
+
+        AnimationCurrent = true;
     }
 
 
@@ -135,7 +190,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     {
         GameBoard = new GameObject[BoardSize, BoardSize];
         GamePieces = new List<GameObject>();
-        PieceAnimationQueue = new Queue<(Vector3 largest, Vector3 source, GameObject piece)>();
+        PieceAnimationQueue = new Queue<(Vector3 target, AnimationType type, GameObject piece)>();
 
         StartCoroutine(SpawnBoardAfterTimer());
     }
@@ -143,28 +198,87 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     // Update is called once per frame
     void Update()
     {
-        if (!AnimationCurrent && PieceAnimationQueue.Count > 0)
+        if (!AnimationCurrent && !AnimationStarted && PieceAnimationQueue.Count > 0)
         {
-            AnimationCurrent = true;
-            (AnimationEnd, AnimationStart, AnimationPiece) = PieceAnimationQueue.Dequeue();
-            AnimationPiece.GetComponent<Rigidbody>().isKinematic = true;
-            AnimationTime = 0.0f;
+            StartCoroutine(AnimateNext());
         }
 
-        if (!AnimationCurrent) return;
-
-        AnimationTime += Time.deltaTime;
-        if (AnimationPiece.transform.position.)
+        if (AnimationCurrent)
         {
-            AnimationCurrent = false;
-            AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
+            switch (AType)
+            {
+                case AnimationType.Direct:
+                    AnimationPiece.transform.localPosition = new Vector3(
+                        (AnimationEnd.x - AnimationStart.x) * AnimationTime + AnimationStart.x,
+                        (AnimationEnd.y - AnimationStart.y) * AnimationTime + AnimationStart.y,
+                        (AnimationEnd.z - AnimationStart.z) * AnimationTime + AnimationStart.z);
 
+                    AnimationTime += Time.deltaTime;
+                    if ((AnimationPiece.transform.localPosition.LocationNearY(AnimationEnd, .25f) &&
+                        AnimationPiece.transform.localPosition.LocationNearX(AnimationEnd, .01f) &&
+                        AnimationPiece.transform.localPosition.LocationNearZ(AnimationEnd, .01f)) || AnimationTime > .75f)
+                    {
+                        AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
+                        AnimationPiece.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                        AnimationPiece.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                        AnimationCurrent = false;
+                        AnimationStarted = false;
+
+                        return;
+                    }
+                    break;
+                case AnimationType.Arc:
+                    AnimationPiece.transform.localPosition = new Vector3(
+                        (AnimationEnd.x - AnimationStart.x) * AnimationTime + AnimationStart.x,
+                        -30 * AnimationTime * AnimationTime + 30 * AnimationTime + AnimationStart.y + .25f,
+                        (AnimationEnd.z - AnimationStart.z) * AnimationTime + AnimationStart.z);
+
+                    AnimationTime += Time.deltaTime;
+                    if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, .5f) || AnimationTime > .50f)
+                    {
+                        AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
+                        AnimationPiece.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                        AnimationPiece.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+
+                        if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, .1f) || AnimationTime > 1f)
+                        {
+                            AnimationCurrent = false;
+                            AnimationStarted = false;
+                        }
+
+                        return;
+                    }
+                    break;
+                case AnimationType.Rotation:
+                    if (AnimationStarted)
+                    {
+                        AnimationPiece.GetComponent<AnimatedRotation>().SetDirection(AnimationEnd);
+                        AnimationStarted = false;
+                    }
+
+                    AnimationPiece.transform.localPosition = new Vector3(
+                        AnimationStart.x,
+                        AnimationStart.y,
+                        AnimationStart.z);
+
+                    AnimationTime += Time.deltaTime;
+                    if (AnimationTime > AnimationPiece.GetComponent<AnimatedRotation>().Duration
+                        || AnimationTime > .9f)
+                    {
+                        AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
+                        AnimationPiece.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                        AnimationPiece.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                        AnimationCurrent = false;
+
+                        return;
+                    }
+                    break;
+
+            }
+        } 
+        else
+        {
             return;
         }
-
-        AnimationPiece.transform.localPosition = new Vector3(
-            (AnimationEnd.x - AnimationStart.x) * AnimationTime + AnimationStart.x,
-            -40 * AnimationTime * AnimationTime + 40 * AnimationTime + AnimationStart.y,
-            (AnimationEnd.z - AnimationStart.z) * AnimationTime + AnimationStart.z);
     }
 }

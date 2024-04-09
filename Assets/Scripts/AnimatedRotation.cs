@@ -11,6 +11,8 @@ public class AnimatedRotation : MonoBehaviour
     public bool LockY;
     public bool LockZ;
 
+    [SerializeField] public Vector3 LastDirection { get; private set; }
+
     [Header("Runtime Parameters")]
     [SerializeField] private Quaternion _fromDirection;
     [SerializeField] private Quaternion _targetDirection;
@@ -59,9 +61,10 @@ public class AnimatedRotation : MonoBehaviour
     {
         this._timeRemaining = this.Duration;
         this._fromDirection = this.transform.rotation;
-        this._targetDirection = Quaternion.FromToRotation(
-            Vector3.up,
-            direction
-        );
+        //this._targetDirection = Quaternion.FromToRotation(Vector3.up, direction);
+        //this._targetDirection = Quaternion.AngleAxis(Vector3.Angle(this.transform.up, direction), Vector3.Cross(this.transform.up, direction));
+        this._targetDirection = Quaternion.AngleAxis(Vector3.Angle(Vector3.up, direction), Vector3.Cross(Vector3.up, direction));
+
+        this.LastDirection = direction;
     }
 }
