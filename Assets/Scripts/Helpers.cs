@@ -1,4 +1,7 @@
+using System.Collections;
+using System.Drawing;
 using Unity;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -49,5 +52,35 @@ public static class Helpers
         }
 
         return new Quaternion(w.x, w.y, w.z, r).normalized;
+    }
+
+    public static Point Add(this Point p, Point q)
+    {
+        return new Point(p.X + q.X, p.Y + q.Y);
+    }
+
+    public static Point Subtract(this Point p, Point q)
+    {
+        return new Point(p.X - q.X, p.Y - q.Y);
+    }
+
+    public static bool HasValue<T>(this T[,] values, T value)
+    {
+        foreach (T b in values)
+        {
+            if (b.Equals(value)) return true;
+        }
+
+        return false;
+    }
+
+    public static bool HasValue<T>(this T[,] values, T value, System.Func<T, T, bool> comperator)
+    {
+        foreach (T b in values)
+        {
+            if (comperator(b, value)) return true;
+        }
+
+        return false;
     }
 }

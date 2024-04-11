@@ -52,6 +52,8 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
             BoardUpdate boardUpdate = (BoardUpdate)value;
 
             ChangeSquare(boardUpdate.loc, boardUpdate.c);
+
+            PrepNextPiece();
         }
         else if (value.Type == ChangeType.BoardReset)
         {
@@ -86,9 +88,9 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         } else
         {
             this.GameBoard[loc.X, loc.Y] = GamePieces[NextGamePiece];
-            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) - .5f), 
-                                        Board.transform.position.y + 500f, 
-                                        (float)(loc.Y - (BoardSize / 2) - .5f))
+            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) + .5f), 
+                                        Board.transform.position.y + 5, 
+                                        (float)(loc.Y - (BoardSize / 2) + .5f))
                                         , AnimationType.Arc
                                         , GamePieces[NextGamePiece]));
             ChangeSquare(loc, c);
@@ -115,9 +117,9 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 
         if (go != null)
         {
-            Vector3 CorrectPos = new Vector3((float)(pos.X - (BoardSize / 2) - .5),
+            Vector3 CorrectPos = new Vector3((float)(pos.X - (BoardSize / 2) + .5),
                                                 (float)(go.transform.position.y + 2f),
-                                                (float)(pos.Y - (BoardSize / 2) - .5));
+                                                (float)(pos.Y - (BoardSize / 2) + .5));
 
             PieceAnimationQueue.Enqueue((CorrectPos, AnimationType.Direct, go));
 
@@ -143,28 +145,25 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
             GamePieces.Add(piece);
         }
 
-        yield return new WaitForSeconds(7);
+        OthelloModel.Instance.Subscribe(this);
+
+        yield return new WaitForSeconds(6);
 
         PrepNextPiece();
-        ChangeSquare(new Point(4, 4), PlayerColor.Black);
-        PrepNextPiece();
-        ChangeSquare(new Point(4, 5), PlayerColor.White);
-        PrepNextPiece();
-        ChangeSquare(new Point(5, 5), PlayerColor.Black);
-        PrepNextPiece();
-        ChangeSquare(new Point(5, 4), PlayerColor.White);
+
+        OthelloModel.Instance.SetupBoard();
     }
 
     private void PrepNextPiece()
     {
         if (NextGamePiece % 2 == 1)
         {
-            Vector3 location = new Vector3(6.75f, Board.transform.position.y + .75f, 0);
+            Vector3 location = new Vector3(6.75f, Board.transform.position.y + 1f, 0);
 
             PieceAnimationQueue.Enqueue((location, AnimationType.Direct, GamePieces[NextGamePiece]));
         } else
         {
-            Vector3 location = new Vector3(-6.75f, Board.transform.position.y + .75f, 0);
+            Vector3 location = new Vector3(-6.75f, Board.transform.position.y + 1f, 0);
 
             PieceAnimationQueue.Enqueue((location, AnimationType.Direct, GamePieces[NextGamePiece]));
         }
@@ -230,17 +229,17 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
                 case AnimationType.Arc:
                     AnimationPiece.transform.localPosition = new Vector3(
                         (AnimationEnd.x - AnimationStart.x) * AnimationTime + AnimationStart.x,
-                        -30 * AnimationTime * AnimationTime + 30 * AnimationTime + AnimationStart.y + .25f,
+                        -5 * AnimationTime * AnimationTime + 5 * AnimationTime + AnimationStart.y + AnimationEnd.y,
                         (AnimationEnd.z - AnimationStart.z) * AnimationTime + AnimationStart.z);
 
                     AnimationTime += Time.deltaTime;
-                    if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, .5f) || AnimationTime > .50f)
+                    if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, 1f) || AnimationTime > .75f)
                     {
                         AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
                         AnimationPiece.GetComponent<Rigidbody>().velocity = Vector3.zero;
                         AnimationPiece.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
 
-                        if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, .1f) || AnimationTime > 1f)
+                        if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, .25f) || AnimationTime > 1.5f)
                         {
                             AnimationCurrent = false;
                             AnimationStarted = false;
@@ -252,14 +251,13 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
                 case AnimationType.Rotation:
                     if (AnimationStarted)
                     {
-                        AnimationPiece.GetComponent<AnimatedRotation>().SetDirection(AnimationEnd);
                         AnimationStarted = false;
-                    }
 
-                    AnimationPiece.transform.localPosition = new Vector3(
-                        AnimationStart.x,
-                        AnimationStart.y,
-                        AnimationStart.z);
+                        if (!AnimationPiece.GetComponent<AnimatedRotation>().SetDirection(AnimationEnd))
+                        {
+                            AnimationTime = 999f;
+                        }
+                    }
 
                     AnimationTime += Time.deltaTime;
                     if (AnimationTime > AnimationPiece.GetComponent<AnimatedRotation>().Duration
@@ -272,6 +270,12 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
 
                         return;
                     }
+
+                    AnimationPiece.transform.localPosition = new Vector3(
+                        AnimationStart.x,
+                        AnimationStart.y,
+                        AnimationStart.z);
+
                     break;
 
             }

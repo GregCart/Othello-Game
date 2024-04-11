@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
-
+using UnityEngine;
 using static OthelloModel;
+using Debug = UnityEngine.Debug;
 
 
 public class OthelloModel: IObservable<ModelChange>
@@ -34,6 +36,8 @@ public class OthelloModel: IObservable<ModelChange>
 	{
 		OthelloBoard = new PlayerColor[8,8];
 		Observers = new List<IObserver<ModelChange>>();
+
+		currentPlayer = PlayerColor.Black;
 		
 		ResetBoard();
 	}
@@ -64,16 +68,16 @@ public class OthelloModel: IObservable<ModelChange>
 			observer.OnNext(change);
 		}
 	}
-	
-	public bool MakeMove(int x, int y) 
+
+    public bool MakeMove(int x, int y) 
 	{
+		Debug.Log("\tTry " + x + ", " + y);
+
 		if (!LegalMove(x, y)) return false;
 		
-		OthelloBoard[x,y] = currentPlayer;
-		Notify(new BoardUpdate(x, y, currentPlayer));
-		
-		//flip current player
-		currentPlayer = currentPlayer == PlayerColor.Black ? PlayerColor.White : PlayerColor.Black;
+		int updates = DoMove(x, y);
+
+		Debug.Log(updates + " Tiles Changed");
 		
 		return true;
 	}
@@ -81,14 +85,90 @@ public class OthelloModel: IObservable<ModelChange>
 	public bool MakeMove(Point p) {
 		return MakeMove(p.X, p.Y);
 	}
+
+	private int DoMove(int x, int y)
+	{
+        OthelloBoard[x, y] = currentPlayer;
+        Notify(new BoardUpdate(x, y, currentPlayer));
+
+		int numUps = 0;
+		List<BoardUpdate> ups = new List<BoardUpdate>();
+
+        for (int i = -1; i <= 1; i++)
+        {
+            for (int j = -1; j <= 1; j++)
+            {
+                Point check = new Point(x + i, y + j);
+				List<BoardUpdate> tmpUps = new List<BoardUpdate>();
+
+                while (check.X > 0 && check.Y > 0 && check.X < 8 && check.Y < 8 && OthelloBoard[check.X, check.Y] != PlayerColor.Empty)
+                {
+                    if (OthelloBoard[check.X, check.Y] == currentPlayer)
+                    {
+						ups.AddRange(tmpUps);
+                        break;
+                    }
+                    else
+                    {
+						tmpUps.Add(new BoardUpdate(check.X, check.Y, currentPlayer));
+                        check = check.Add(new Point(i, j));
+                    }
+                }
+            }
+        }
+
+		foreach (BoardUpdate up in ups)
+		{
+            OthelloBoard[up.loc.X, up.loc.Y] = currentPlayer;
+            Notify(up);
+			numUps++;
+        }
+
+        //flip current player
+        currentPlayer = currentPlayer == PlayerColor.Black ? PlayerColor.White : PlayerColor.Black;
+
+        return numUps;
+    }
 	
 	public bool LegalMove(int x, int y)
 	{
 		if (OthelloBoard[x,y] != PlayerColor.Empty) return false;
 
 		//check if it completes line
+		bool[,] dirs = new bool[3, 3];
 
-		return true;
+		for (int i = -1; i <= 1; i++)
+		{
+			for (int j = -1; j <= 1; j++)
+			{
+				Point check = new Point(x + i, y + j);
+				bool nextTo = true;
+
+				while (check.X > 0 && check.Y > 0 && check.X < 8 && check.Y < 8 && OthelloBoard[check.X, check.Y] != PlayerColor.Empty)
+				{
+					if (OthelloBoard[check.X, check.Y] == currentPlayer)
+					{
+						dirs[i + 1, j + 1] = !nextTo;
+						break;
+					}
+					else
+                    {
+                        nextTo = false;
+                        check = check.Add(new Point(i, j));
+                    }
+				}
+            }
+		}
+
+		return dirs.HasValue<bool>(true, (x, y) => { return x == y; }) ;
+	}
+
+	public void SetupBoard()
+	{
+		DoMove(3, 3);
+        DoMove(3, 4);
+        DoMove(4, 4);
+        DoMove(4, 3);
 	}
 	
 	//other helpful fields
