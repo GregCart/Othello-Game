@@ -30,12 +30,14 @@ public class OthelloModel: IObservable<ModelChange>
 	public PlayerColor[,] OthelloBoard;
 	
 	private List<IObserver<ModelChange>> Observers;
+	private int moves;
 	
 	
 	private OthelloModel() 
 	{
 		OthelloBoard = new PlayerColor[8,8];
 		Observers = new List<IObserver<ModelChange>>();
+		moves = 0;
 
 		currentPlayer = PlayerColor.Black;
 		
@@ -71,13 +73,22 @@ public class OthelloModel: IObservable<ModelChange>
 
     public bool MakeMove(int x, int y) 
 	{
-		Debug.Log("\tTry " + x + ", " + y);
+		//Debug.Log("\tTry " + x + ", " + y);
 
 		if (!LegalMove(x, y)) return false;
 		
 		int updates = DoMove(x, y);
 
 		Debug.Log(updates + " Tiles Changed");
+
+		if (moves >= 64)
+		{
+            PlayerColor w = DetermineWinner();
+			GameUpdate gu = new GameUpdate();
+			gu.c = w;
+
+			Notify(gu);
+		}
 		
 		return true;
 	}
@@ -90,6 +101,7 @@ public class OthelloModel: IObservable<ModelChange>
 	{
         OthelloBoard[x, y] = currentPlayer;
         Notify(new BoardUpdate(x, y, currentPlayer));
+		moves++;
 
 		int numUps = 0;
 		List<BoardUpdate> ups = new List<BoardUpdate>();
@@ -170,6 +182,33 @@ public class OthelloModel: IObservable<ModelChange>
         DoMove(4, 4);
         DoMove(4, 3);
 	}
+
+	public PlayerColor DetermineWinner()
+	{
+		int total = 0;
+
+		foreach (PlayerColor c in OthelloBoard)
+		{
+			if (c == PlayerColor.White)
+			{
+				total++;
+			} else
+			{
+				total--;
+			}
+		}
+
+		if (total > 0)
+		{
+			return PlayerColor.White;
+		} else if (total < 0)
+		{
+			return PlayerColor.Black;
+		} else
+		{
+			return PlayerColor.Empty;
+		}
+	}
 	
 	//other helpful fields
 	public enum ChangeType {BoardUpdate, BoardReset, PlayerWin}
@@ -194,6 +233,17 @@ public class OthelloModel: IObservable<ModelChange>
 		{
 			this.loc = new Point(x, y);
 			this.c = c;
+		}
+	}
+
+	public class GameUpdate : ModelChange
+	{
+		public PlayerColor c;
+
+
+		public GameUpdate()
+		{
+			this.Type = ChangeType.PlayerWin;
 		}
 	}
 }

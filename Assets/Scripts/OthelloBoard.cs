@@ -70,12 +70,15 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
             }
 
             StartCoroutine(SpawnBoardAfterTimer());
+        } else if (value.Type == ChangeType.PlayerWin)
+        {
+            
         }
     }
 
     public void OnNext(Point value)
     {
-        Debug.Log(this.MoveFollowPiece.transform.localPosition + " --> " + value);
+        //Debug.Log(this.MoveFollowPiece.transform.localPosition + " --> " + value);
 
         MoveFollowPiece.transform.localPosition = new Vector3(
             value.X,
@@ -114,7 +117,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
             ChangeSquare(loc, c);
             NextGamePiece++;
 
-            if (NextGamePiece > 3)
+            if (NextGamePiece > 3 && NextGamePiece % 4 == 3)
             {
                 needsAdjust = true;
             }
@@ -234,6 +237,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
         Color c = this.TransparentGamePiece.GetComponentInChildren<Renderer>().material.color;
         //this.TransparentGamePiece.GetComponent<Renderer>().material.color = new Color(c.r, c.g, c.b, .5f);
         this.TransparentGamePiece.GetComponent<Rigidbody>().isKinematic = true;
+        this.TransparentGamePiece.GetComponent <Collider>().enabled = false;
     }
 
     // Update is called once per frame

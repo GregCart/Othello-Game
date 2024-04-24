@@ -1,9 +1,11 @@
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using static OthelloModel;
 
 
-public class GUIEvents : MonoBehaviour
+public class GUIEvents : MonoBehaviour, IObserver<ModelChange>
 {
 	private UIDocument uiDoc;
 	private RadioButtonGroup whitePlayer, blackPlayer;
@@ -45,4 +47,19 @@ public class GUIEvents : MonoBehaviour
 		whiteAILevel.visible = whitePlayer.value == 1;
 		blackAILevel.visible = blackPlayer.value == 1;
 	}
+
+    public void OnCompleted()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void OnError(Exception error)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void OnNext(ModelChange value)
+    {
+		Debug.Log(value.Type);
+    }
 }
