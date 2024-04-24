@@ -64,7 +64,7 @@ public class AnimatedRotation : MonoBehaviour
         //this._targetDirection = Quaternion.AngleAxis(Vector3.Angle(this.transform.up, direction), Vector3.Cross(this.transform.up, direction));
         //this._targetDirection = Quaternion.AngleAxis(Vector3.Angle(Vector3.up, direction), Vector3.Cross(Vector3.up, direction));
 
-        if (this._fromDirection == this._targetDirection)
+        if (this._fromDirection == this._targetDirection && this.transform.up == direction)
         {
             return false;
         }

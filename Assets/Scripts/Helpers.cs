@@ -7,10 +7,20 @@ using UnityEngine;
 
 public static class Helpers
 {
+    public static bool LocationBallPark(this Vector3 a, Vector3 b, float tollerance)
+    {
+        bool x = a.LocationNearX(b, tollerance);
+        bool y = a.LocationNearY(b, tollerance);
+        bool z = a.LocationNearZ(b, tollerance);
+
+        return (x && y) || (x && z) || (y && z);
+    }
+
     public static bool LocationNear(this Vector3 a, Vector3 b, float tollerance)
     {
        return LocationNearX(a, b, tollerance) && LocationNearY(a, b, tollerance) && LocationNearZ(a, b, tollerance);
     }
+
     public static bool isNear(this float a, float b, float tollerance)
     {
         float min = b - tollerance;

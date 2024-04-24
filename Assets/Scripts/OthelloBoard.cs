@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using static OthelloModel;
+using Color = UnityEngine.Color;
 
 
-public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
+public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Point>
 {
     private enum AnimationType { Direct, Arc, Rotation }
 
@@ -33,6 +35,8 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     private Queue<(Vector3 target, AnimationType type, GameObject piece)> PieceAnimationQueue;
     [SerializeField]
     private AnimationType AType;
+    bool isClose = false;
+    bool needsAdjust = false;
 
 
     public void OnCompleted()
@@ -69,6 +73,18 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         }
     }
 
+    public void OnNext(Point value)
+    {
+        Debug.Log(this.MoveFollowPiece.transform.localPosition + " --> " + value);
+
+        MoveFollowPiece.transform.localPosition = new Vector3(
+            value.X,
+            2f,
+            value.Y
+            );
+    }
+
+
     public void ChangeSquare(Point loc, PlayerColor c)
     {
         GameObject go = this.GameBoard[loc.X, loc.Y];
@@ -77,10 +93,12 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         {
             if (c == PlayerColor.White)
             {
-                go.GetComponent<AnimatedRotation>().SetDirection(Vector3.up);
+                //go.GetComponent<AnimatedRotation>().SetDirection(Vector3.up);
+                PieceAnimationQueue.Enqueue((Vector3.up, AnimationType.Rotation, go));
             } else if (c == PlayerColor.Black)
             {
-                go.GetComponent<AnimatedRotation>().SetDirection(Vector3.down);
+                //go.GetComponent<AnimatedRotation>().SetDirection(Vector3.down);
+                PieceAnimationQueue.Enqueue((Vector3.down, AnimationType.Rotation, go));
             } else if (c == PlayerColor.Empty)
             {
                 Destroy(go);
@@ -89,15 +107,18 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         {
             this.GameBoard[loc.X, loc.Y] = GamePieces[NextGamePiece];
             PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) + .5f), 
-                                        Board.transform.position.y + 5, 
+                                        Board.transform.position.y + 2f, 
                                         (float)(loc.Y - (BoardSize / 2) + .5f))
                                         , AnimationType.Arc
                                         , GamePieces[NextGamePiece]));
             ChangeSquare(loc, c);
             NextGamePiece++;
-        }
 
-        AdjustEntireBoard();
+            if (NextGamePiece > 3)
+            {
+                needsAdjust = true;
+            }
+        }
     }
 
     private void AdjustEntireBoard()
@@ -152,6 +173,8 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         PrepNextPiece();
 
         OthelloModel.Instance.SetupBoard();
+
+        this.gameObject.GetComponent<BoardInput>().Subscribe(this);
     }
 
     private void PrepNextPiece()
@@ -173,8 +196,9 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
     {
         AnimationStarted = true;
 
-        yield return new WaitForSeconds(.35f);
+        yield return new WaitForSeconds(.05f);
 
+        AnimationStart = AnimationEnd;
         (AnimationEnd, AType, AnimationPiece) = PieceAnimationQueue.Dequeue();
         AnimationPiece.GetComponent<Rigidbody>().isKinematic = true;
         AnimationStart = AnimationPiece.transform.localPosition;
@@ -183,6 +207,18 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         AnimationCurrent = true;
     }
 
+    private IEnumerator SetupAdjustment()
+    {
+        while (PieceAnimationQueue.Count > 0)
+        {
+            yield return new WaitForSeconds(1);
+        }
+
+        AdjustEntireBoard();
+    }
+
+
+
 
     // Start is called before the first frame update
     void Start()
@@ -190,8 +226,14 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         GameBoard = new GameObject[BoardSize, BoardSize];
         GamePieces = new List<GameObject>();
         PieceAnimationQueue = new Queue<(Vector3 target, AnimationType type, GameObject piece)>();
+        isClose = false;
 
         StartCoroutine(SpawnBoardAfterTimer());
+
+        this.TransparentGamePiece = Instantiate(MoveFollowPiece);
+        Color c = this.TransparentGamePiece.GetComponentInChildren<Renderer>().material.color;
+        //this.TransparentGamePiece.GetComponent<Renderer>().material.color = new Color(c.r, c.g, c.b, .5f);
+        this.TransparentGamePiece.GetComponent<Rigidbody>().isKinematic = true;
     }
 
     // Update is called once per frame
@@ -200,6 +242,12 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
         if (!AnimationCurrent && !AnimationStarted && PieceAnimationQueue.Count > 0)
         {
             StartCoroutine(AnimateNext());
+
+            if (needsAdjust)
+            {
+                StartCoroutine(SetupAdjustment());
+                needsAdjust = false;
+            }
         }
 
         if (AnimationCurrent)
@@ -215,7 +263,9 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
                     AnimationTime += Time.deltaTime;
                     if ((AnimationPiece.transform.localPosition.LocationNearY(AnimationEnd, .25f) &&
                         AnimationPiece.transform.localPosition.LocationNearX(AnimationEnd, .01f) &&
-                        AnimationPiece.transform.localPosition.LocationNearZ(AnimationEnd, .01f)) || AnimationTime > .75f)
+                        AnimationPiece.transform.localPosition.LocationNearZ(AnimationEnd, .01f)) 
+                        || AnimationTime > 5f)
+                        //)
                     {
                         AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
                         AnimationPiece.GetComponent<Rigidbody>().velocity = Vector3.zero;
@@ -232,15 +282,23 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>
                         -5 * AnimationTime * AnimationTime + 5 * AnimationTime + AnimationStart.y + AnimationEnd.y,
                         (AnimationEnd.z - AnimationStart.z) * AnimationTime + AnimationStart.z);
 
+                    //Debug.Log(AnimationTime + " @ " + AnimationPiece.transform.localPosition + " --> " + AnimationEnd);
+
                     AnimationTime += Time.deltaTime;
-                    if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, 1f) || AnimationTime > .75f)
+                    if (isClose || AnimationPiece.transform.localPosition.LocationBallPark(AnimationEnd, 1f) 
+                        //|| AnimationTime > 1f)
+                        )
                     {
                         AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
                         AnimationPiece.GetComponent<Rigidbody>().velocity = Vector3.zero;
                         AnimationPiece.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                        isClose = true;
 
-                        if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, .25f) || AnimationTime > 1.5f)
+                        if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, .25f) 
+                            || isClose && AnimationTime > 1.2f)
+                        //)
                         {
+                            AnimationPiece.transform.localPosition = AnimationEnd;
                             AnimationCurrent = false;
                             AnimationStarted = false;
                         }

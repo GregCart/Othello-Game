@@ -637,7 +637,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GamePiece: {fileID: 886119997252447041, guid: be6091665a70db54f90da6dd71b1429d, type: 3}
-  TransparentGamePiece: {fileID: 886119997252447041, guid: be6091665a70db54f90da6dd71b1429d, type: 3}
+  TransparentGamePiece: {fileID: 0}
   MoveFollowPiece: {fileID: 886119997252447041, guid: be6091665a70db54f90da6dd71b1429d, type: 3}
   LeftGamePieceStorage: {fileID: 286336950}
   RightGamePieceStorage: {fileID: 487223867}
