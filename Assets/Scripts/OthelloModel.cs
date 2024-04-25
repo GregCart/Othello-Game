@@ -156,7 +156,7 @@ public class OthelloModel: IObservable<ModelChange>
 				Point check = new Point(x + i, y + j);
 				bool nextTo = true;
 
-				while (check.X > 0 && check.Y > 0 && check.X < 8 && check.Y < 8 && OthelloBoard[check.X, check.Y] != PlayerColor.Empty)
+				while (check.X >= 0 && check.Y >= 0 && check.X < 8 && check.Y < 8 && OthelloBoard[check.X, check.Y] != PlayerColor.Empty)
 				{
 					if (OthelloBoard[check.X, check.Y] == currentPlayer)
 					{

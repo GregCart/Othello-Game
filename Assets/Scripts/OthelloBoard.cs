@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Threading.Tasks;
 using TMPro;
 using Unity.VisualScripting;
@@ -72,7 +73,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
             StartCoroutine(SpawnBoardAfterTimer());
         } else if (value.Type == ChangeType.PlayerWin)
         {
-            
+            Debug.Log(((GameUpdate)value).c);
         }
     }
 
@@ -94,6 +95,10 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
 
         if (go != null)
         {
+            if (NextGamePiece > 3 && int.Parse(go.name.Split(' ')[1]) < NextGamePiece)
+            {
+                PieceAnimationQueue.Enqueue((new Vector3(go.transform.localPosition.x, go.transform.localPosition.y + 1f, go.transform.localPosition.z), AnimationType.Direct, go));
+            }
             if (c == PlayerColor.White)
             {
                 //go.GetComponent<AnimatedRotation>().SetDirection(Vector3.up);
@@ -114,6 +119,10 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
                                         (float)(loc.Y - (BoardSize / 2) + .5f))
                                         , AnimationType.Arc
                                         , GamePieces[NextGamePiece]));
+
+            PieceAnimationQueue.Enqueue((new Vector3((float)(loc.X - (BoardSize / 2) + .5f), Board.transform.position.y + 2f, (float)(loc.Y - (BoardSize / 2) + .5f)), 
+                                        AnimationType.Direct, 
+                                        GamePieces[NextGamePiece]));
             ChangeSquare(loc, c);
             NextGamePiece++;
 
@@ -130,7 +139,8 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
         {
             for (int y = 0; y < BoardSize; y++)
             {
-                AdjustPieceAt(new Point(x, y));
+                if (GameBoard[x, y] && !GameBoard[x, y].transform.localPosition.LocationNear(new Vector3(x - 4 + .5f, 1.1f, y - 4 + .5f), .05f))
+                    AdjustPieceAt(new Point(x, y));
             }
         }
     }
@@ -141,8 +151,17 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
 
         if (go != null)
         {
+            if (go.transform.localPosition.x > 100 || go.transform.localPosition.y < -100 || go.transform.localPosition.z > 100 || go.transform.localPosition.x < -100 || go.transform.localPosition.z < -100)
+            {
+                go.transform.localPosition = new Vector3(0, 5, 0);
+
+                go.GetComponent<Rigidbody>().isKinematic = false;
+                go.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                go.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+            }
+            
             Vector3 CorrectPos = new Vector3((float)(pos.X - (BoardSize / 2) + .5),
-                                                (float)(go.transform.position.y + 2f),
+                                                (float)(Board.transform.position.y + 2f),
                                                 (float)(pos.Y - (BoardSize / 2) + .5));
 
             PieceAnimationQueue.Enqueue((CorrectPos, AnimationType.Direct, go));
@@ -165,6 +184,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
             Quaternion rotation = Quaternion.AngleAxis((float)((Math.PI * i) % (2 * Math.PI)), Vector3.right);
 
             GameObject piece = Instantiate(GamePiece, new Vector3(x, 10 + i * 2 + (float)(rnd.NextDouble() / 20), z), rotation);
+            piece.name = "Piece " + i;
 
             GamePieces.Add(piece);
         }
