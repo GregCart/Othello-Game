@@ -20,21 +20,27 @@ public class Dropdown : MonoBehaviour
                 player1.SetActive(false);
                 player2.SetActive(false);
                 start.SetActive(false);
-                selectedOption.text = "No AI";
+                selectedOption.text = "---";
                 break;
             case 1:
+                player1.SetActive(false);
+                player2.SetActive(false);
+                start.SetActive(true);
+                selectedOption.text = "No AI";
+                break;
+            case 2:
                 player1.SetActive(true);
                 player2.SetActive(false);
                 start.SetActive(true);
                 selectedOption.text = "Player 1";
                 break;
-            case 2:
+            case 3:
                 player1.SetActive(false);
                 player2.SetActive(true);
                 start.SetActive(true);
                 selectedOption.text = "Player 2";
                 break;
-            case 3:
+            case 4:
                 player1.SetActive(true);
                 player2.SetActive(true);
                 start.SetActive(true);

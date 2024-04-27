@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 
 public class OthelloMainMenu : MonoBehaviour
@@ -10,15 +10,15 @@ public class OthelloMainMenu : MonoBehaviour
 	public Slider player1;
 	public Slider player2;
 
-	protected void Start()
+	void Start()
 	{
 		
 	}
 	
-	private void StartTheGame()
+	public void StartTheGame()
 	{
 		//set parameters in singleton game object
-		//OthelloModel.Instance.
+		OthelloModel.Instance.SetAiLevels((int)player1.value, (int)player2.value);
 		
 		SceneManager.LoadScene("Othello Game");
 	}

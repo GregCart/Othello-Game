@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using UnityEngine;
 using static OthelloModel;
@@ -31,6 +30,8 @@ public class OthelloModel: IObservable<ModelChange>
 	
 	private List<IObserver<ModelChange>> Observers;
 	private int moves;
+	[SerializeField] private int AI1Level;
+	[SerializeField] private int AI2Level;
 	
 	
 	private OthelloModel() 
@@ -181,6 +182,12 @@ public class OthelloModel: IObservable<ModelChange>
         DoMove(3, 4);
         DoMove(4, 4);
         DoMove(4, 3);
+	}
+
+	public void SetAiLevels(int AI1Level, int AI2Level)
+	{
+		this.AI1Level = AI1Level;
+		this.AI2Level = AI2Level;
 	}
 
 	public PlayerColor DetermineWinner()

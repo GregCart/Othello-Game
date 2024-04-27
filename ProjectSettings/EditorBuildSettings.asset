@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: fb66b48cdfad9ce478f1ea8a22f29857
+  - enabled: 1
+    path: Assets/Scenes/Othello Game.unity
+    guid: 819874c8af207d647b3d2ad70723b226
   m_configObjects: {}

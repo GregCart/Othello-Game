@@ -3,7 +3,14 @@ guid: 2693079a2981e1141b158c4a7ee8d720
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - GamePiece: {instanceID: 0}
+  - TransparentGamePiece: {instanceID: 0}
+  - MoveFollowPiece: {instanceID: 0}
+  - LeftGamePieceStorage: {fileID: 148976743060021289, guid: 9ca9d1721bee0154caa6eaa620b3eb28, type: 3}
+  - RightGamePieceStorage: {instanceID: 0}
+  - Board: {instanceID: 0}
+  - AnimationPiece: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

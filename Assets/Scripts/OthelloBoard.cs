@@ -181,7 +181,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
         {
             float x = i % 2 == 1 ? RightGamePieceStorage.gameObject.transform.position.x : LeftGamePieceStorage.gameObject.transform.position.x;
             float z = i % 2 == 1 ? RightGamePieceStorage.gameObject.transform.position.z : LeftGamePieceStorage.gameObject.transform.position.z;
-            Quaternion rotation = Quaternion.AngleAxis((float)((Math.PI * i) % (2 * Math.PI)), Vector3.right);
+            Quaternion rotation = Quaternion.AngleAxis((float)((180 * (i + 1)) % (360)), Vector3.right);
 
             GameObject piece = Instantiate(GamePiece, new Vector3(x, 10 + i * 2 + (float)(rnd.NextDouble() / 20), z), rotation);
             piece.name = "Piece " + i;
@@ -285,7 +285,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
                         (AnimationEnd.z - AnimationStart.z) * AnimationTime + AnimationStart.z);
 
                     AnimationTime += Time.deltaTime;
-                    if ((AnimationPiece.transform.localPosition.LocationNearY(AnimationEnd, .25f) &&
+                    if ((AnimationPiece.transform.localPosition.LocationNearY(AnimationEnd, .15f) &&
                         AnimationPiece.transform.localPosition.LocationNearX(AnimationEnd, .01f) &&
                         AnimationPiece.transform.localPosition.LocationNearZ(AnimationEnd, .01f)) 
                         || AnimationTime > 5f)
@@ -319,7 +319,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
                         isClose = true;
 
                         if (AnimationPiece.transform.localPosition.LocationNear(AnimationEnd, .25f) 
-                            || isClose && AnimationTime > 1.2f)
+                            || isClose && AnimationTime > 1.1f)
                         //)
                         {
                             AnimationPiece.transform.localPosition = AnimationEnd;
@@ -343,7 +343,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
 
                     AnimationTime += Time.deltaTime;
                     if (AnimationTime > AnimationPiece.GetComponent<AnimatedRotation>().Duration
-                        || AnimationTime > .9f)
+                        || AnimationTime > .75f)
                     {
                         AnimationPiece.GetComponent<Rigidbody>().isKinematic = false;
                         AnimationPiece.GetComponent<Rigidbody>().velocity = Vector3.zero;
