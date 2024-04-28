@@ -53,7 +53,7 @@ public class MiniMaxPlayer : IObserver<ModelChange>
     //need level, point, and value
     private (int, Point, int) RecursiveMiniMax(PlayerColor[,] board, Point p, int level)
     {
-        if (IsBaseCase(board))
+        if (IsBaseCase(board) || level > AIlevel + 1)
         {
             return (level, p, EvaluateBoard(board));
         }
