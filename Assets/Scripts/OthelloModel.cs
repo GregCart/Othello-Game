@@ -12,7 +12,6 @@ public class OthelloModel: IObservable<ModelChange>
 
 	public enum PlayerColor {White, Black, Empty}
 	
-	
 	public static OthelloModel Instance 
 	{
 		get 
@@ -26,9 +25,12 @@ public class OthelloModel: IObservable<ModelChange>
 	}
 	
 	public PlayerColor currentPlayer {private set; get;}
+	public int boardSize { private set; get;}
+
 	public PlayerColor[,] OthelloBoard;
-	
-	private List<IObserver<ModelChange>> Observers;
+    public MiniMaxPlayer[] players;
+
+    private List<IObserver<ModelChange>> Observers;
 	private int moves;
 	[SerializeField] private int AI1Level;
 	[SerializeField] private int AI2Level;
@@ -36,7 +38,9 @@ public class OthelloModel: IObservable<ModelChange>
 	
 	private OthelloModel() 
 	{
-		OthelloBoard = new PlayerColor[8,8];
+		boardSize = 8;
+
+		OthelloBoard = new PlayerColor[boardSize, boardSize];
 		Observers = new List<IObserver<ModelChange>>();
 		moves = 0;
 
@@ -54,6 +58,16 @@ public class OthelloModel: IObservable<ModelChange>
 				OthelloBoard[x, y] = PlayerColor.Empty;
 				Notify(new BoardUpdate(x, y, PlayerColor.Empty));
 			}
+		}
+
+		players = new MiniMaxPlayer[2];
+		if (AI1Level > 0)
+		{
+			players[0] = new MiniMaxPlayer(AI1Level, PlayerColor.Black);
+		}
+		if (AI2Level > 0)
+		{
+			players[1] = new MiniMaxPlayer(AI2Level, PlayerColor.White);
 		}
 	}
 	

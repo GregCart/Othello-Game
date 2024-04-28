@@ -1,9 +1,5 @@
-using System.Collections;
 using System.Drawing;
-using Unity;
-using Unity.VisualScripting;
 using UnityEngine;
-
 
 public static class Helpers
 {
@@ -92,5 +88,29 @@ public static class Helpers
         }
 
         return false;
+    }
+
+    public static int CountValues<T>(this T[,] values, T value)
+    {
+        int ret = 0;
+
+        foreach (T b in values)
+        {
+            if (b.Equals(value)) ret++;
+        }
+
+        return ret;
+    }
+
+    public static T Max<T>(this System.Collections.Generic.List<T> list, System.Func<T, T, T> maxFinder)
+    {
+        T maxThing = list[0];
+
+        foreach (T b in list)
+        {
+            maxThing = maxFinder(b, maxThing);
+        }
+
+        return maxThing;
     }
 }
