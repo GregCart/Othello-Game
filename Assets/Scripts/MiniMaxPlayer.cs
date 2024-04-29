@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
-using Unity;
+using System.Linq;
+using UnityEngine;
 using static OthelloModel;
+using Debug = UnityEngine.Debug;
 
 
 public class MiniMaxPlayer : IObserver<ModelChange>
@@ -16,10 +19,12 @@ public class MiniMaxPlayer : IObserver<ModelChange>
 
     public MiniMaxPlayer(int level, PlayerColor me)
     {
+        Debug.Log(me + " Init, Level " + level);
         this.AIlevel = level;
         this.model = OthelloModel.Instance;
 
         this.model.Subscribe(this);
+        Debug.Log("Subscribed");
         this.me = me;
     }
 
@@ -38,7 +43,7 @@ public class MiniMaxPlayer : IObserver<ModelChange>
         if (value.Type == ChangeType.BoardUpdate)
         {
             BoardUpdate b = (BoardUpdate)value;
-            if (b.c + 1 % 2 == me)
+            if ((PlayerColor)(((int)b.c + 1) % 2) == me)
             {
                 CalculateMiniMaxMove();
             }
@@ -47,7 +52,8 @@ public class MiniMaxPlayer : IObserver<ModelChange>
 
     private void CalculateMiniMaxMove()
     {
-        
+        (int, Point, int) ret = RecursiveMiniMax(model.OthelloBoard, new Point(0, 0), 1);
+        Debug.Log(ret.Item2);
     }
 
     //need level, point, and value
@@ -89,7 +95,7 @@ public class MiniMaxPlayer : IObserver<ModelChange>
 
     private (Point, int) GetBestBoard(List<(int, Point, int)> states)
     {
-        (int, Point, int) bestState = states[0];
+        (int, Point, int) bestState = states.FirstOrDefault();
 
         foreach (var state in states)
         {

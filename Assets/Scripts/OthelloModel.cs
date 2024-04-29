@@ -45,11 +45,9 @@ public class OthelloModel: IObservable<ModelChange>
 		moves = 0;
 
 		currentPlayer = PlayerColor.Black;
-		
-		ResetBoard();
 	}
 
-	private void ResetBoard()
+	public void ResetBoard()
 	{
         for (int y = 0; y < 8; y++)
         {
@@ -69,6 +67,11 @@ public class OthelloModel: IObservable<ModelChange>
 		{
 			players[1] = new MiniMaxPlayer(AI2Level, PlayerColor.White);
 		}
+	}
+
+	void Awake()
+	{
+
 	}
 	
 	public IDisposable Subscribe(IObserver<ModelChange> observer) 

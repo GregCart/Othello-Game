@@ -79,12 +79,12 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
 
     public void OnNext(Point value)
     {
-        //Debug.Log(this.MoveFollowPiece.transform.localPosition + " --> " + value);
+        //Debug.Log(this.TransparentGamePiece.transform.localPosition + " --> " + value);
 
-        MoveFollowPiece.transform.localPosition = new Vector3(
-            value.X,
+        this.TransparentGamePiece.transform.localPosition = new Vector3(
+            value.X + .5f,
             2f,
-            value.Y
+            value.Y + .5f
             );
     }
 
