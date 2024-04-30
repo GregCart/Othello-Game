@@ -1,4 +1,6 @@
+using System;
 using System.Drawing;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public static class Helpers
@@ -14,7 +16,7 @@ public static class Helpers
 
     public static bool LocationNear(this Vector3 a, Vector3 b, float tollerance)
     {
-       return LocationNearX(a, b, tollerance) && LocationNearY(a, b, tollerance) && LocationNearZ(a, b, tollerance);
+        return LocationNearX(a, b, tollerance) && LocationNearY(a, b, tollerance) && LocationNearZ(a, b, tollerance);
     }
 
     public static bool isNear(this float a, float b, float tollerance)
@@ -112,5 +114,45 @@ public static class Helpers
         }
 
         return maxThing;
+    }
+
+    public static (A, B, C, D) Append<A, B, C, D>(this (A w, B x, C y) tup, D z) 
+    {
+        return (tup.w, tup.x, tup.y, z);
+    }
+
+    public static void Print<T>(this T[,] mat) where T :  int, IComparable, IConvertible, IFormattable
+    {
+        string ret = "[\n";
+        for (int r = 0; r < mat.Rank - 1; r += 2)
+        {
+            ret += PrintRecursive(mat, r, ret);
+        }
+        ret += "]\n";
+
+        Debug.Log(ret);
+    }
+
+    private static string PrintRecursive<T>(this T[,] innerMat, int rank, string ret) where T : struct, IComparable, IConvertible, IFormattable
+    {
+        ret += "\t[\n";
+        for (int i = innerMat.GetLowerBound(rank); i < innerMat.GetLength(rank); i++)
+        {
+            for (int j = innerMat.GetLowerBound(rank); j < innerMat.GetLength(1); j++)
+            {
+                ret += ((Enum)((int)innerMat[i, j])).DisplayName() + " ";
+            }
+            ret += "\n";
+        }
+        if (rank + 1 < innerMat.Rank)
+        {
+            ret += "],\n";
+        }
+        else
+        {
+            ret += "]\n";
+        }
+
+        return ret;
     }
 }

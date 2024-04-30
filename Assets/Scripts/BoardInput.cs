@@ -45,8 +45,8 @@ public class BoardInput : MonoBehaviour, IObservable<Point>
 
         //Debug.Log("\tHit at: " + hit.point.ToString());
 
-        int x = (int)(hit.point.x - 1);
-        int y = (int)(hit.point.z - 1);
+        int x = hit.point.x < 1 ? (int)(hit.point.x - 1f) : (int)(hit.point.x);
+        int y = hit.point.z < 1 ? (int)(hit.point.z - 1f) : (int)(hit.point.z);
 
         //Debug.Log("\tCast as: " + x + ", " + y);
 

@@ -43,7 +43,8 @@ public class MiniMaxPlayer : IObserver<ModelChange>
         if (value.Type == ChangeType.BoardUpdate)
         {
             BoardUpdate b = (BoardUpdate)value;
-            if ((PlayerColor)(((int)b.c + 1) % 2) == me)
+            if (!b.isFlip && (PlayerColor)(((int)b.c + 1) % 2) == me)
+            //if (b.c == me)
             {
                 CalculateMiniMaxMove();
             }
@@ -53,28 +54,30 @@ public class MiniMaxPlayer : IObserver<ModelChange>
     private void CalculateMiniMaxMove()
     {
         (int, Point, int) ret = RecursiveMiniMax(model.OthelloBoard, new Point(0, 0), 1);
-        Debug.Log(ret.Item2);
+        Debug.Log(ret);
     }
 
     //need level, point, and value
     private (int, Point, int) RecursiveMiniMax(PlayerColor[,] board, Point p, int level)
     {
-        if (IsBaseCase(board) || level > AIlevel + 1)
+        if (IsBaseCase(board) || level > AIlevel * 2 + 1)
         {
             return (level, p, EvaluateBoard(board));
         }
 
-        List<(int, Point, int)> boardStates = new List<(int, Point, int)>();
+        List<(int, Point, int, PlayerColor)> boardStates = new List<(int, Point, int, PlayerColor)>();
 
         for (int y = 0; y < model.boardSize; y++)
         {
             for (int x = 0; x < model.boardSize; x++)
             {
-                if (model.LegalMove(x, y))
+                PlayerColor cur = (PlayerColor)(me + level % 2);
+                if (model.LegalMoveForOn(x, y, cur, board))
                 {
                     PlayerColor[,] state = board;
-                    state[x, y] = (PlayerColor)(me + level % 2);
-                    boardStates.Add(RecursiveMiniMax(state, new(x, y), level + 1));
+                    state[x, y] = cur;
+                    state.Print();
+                    boardStates.Add(RecursiveMiniMax(state, new(x, y), level + 1).Append(cur));
                 }
             }
         }
@@ -93,16 +96,20 @@ public class MiniMaxPlayer : IObserver<ModelChange>
         return board.CountValues(PlayerColor.White) + board.CountValues(PlayerColor.Black) == board.Length;
     }
 
-    private (Point, int) GetBestBoard(List<(int, Point, int)> states)
+    private (Point, int) GetBestBoard(List<(int, Point, int, PlayerColor)> states)
     {
-        (int, Point, int) bestState = states.FirstOrDefault();
+        //level, pos, value
+        (int, Point, int, PlayerColor) bestState = states.FirstOrDefault();
 
         foreach (var state in states)
         {
             if (state.Item1 < bestState.Item1)
             {
                 bestState = state;
-            } else if (state.Item3 > bestState.Item3)
+            } else if (state.Item4 == me && state.Item3 >= bestState.Item3)
+            {
+                bestState = state;
+            } else if (state.Item3 <= bestState.Item3)
             {
                 bestState = state;
             }

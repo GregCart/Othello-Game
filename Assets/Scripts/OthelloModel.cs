@@ -57,21 +57,6 @@ public class OthelloModel: IObservable<ModelChange>
 				Notify(new BoardUpdate(x, y, PlayerColor.Empty));
 			}
 		}
-
-		players = new MiniMaxPlayer[2];
-		if (AI1Level > 0)
-		{
-			players[0] = new MiniMaxPlayer(AI1Level, PlayerColor.Black);
-		}
-		if (AI2Level > 0)
-		{
-			players[1] = new MiniMaxPlayer(AI2Level, PlayerColor.White);
-		}
-	}
-
-	void Awake()
-	{
-
 	}
 	
 	public IDisposable Subscribe(IObserver<ModelChange> observer) 
@@ -95,11 +80,16 @@ public class OthelloModel: IObservable<ModelChange>
 
 		if (!LegalMove(x, y)) return false;
 		
-		int updates = DoMove(x, y);
+		DoMove(x, y);
+
+		int updates = UpdateBoard(x, y);
 
 		Debug.Log(updates + " Tiles Changed");
 
-		if (moves >= 64)
+        //flip current player
+        currentPlayer = currentPlayer == PlayerColor.Black ? PlayerColor.White : PlayerColor.Black;
+
+        if (moves >= 64)
 		{
             PlayerColor w = DetermineWinner();
 			GameUpdate gu = new GameUpdate();
@@ -119,50 +109,12 @@ public class OthelloModel: IObservable<ModelChange>
 	{
         OthelloBoard[x, y] = currentPlayer;
         Notify(new BoardUpdate(x, y, currentPlayer));
-		moves++;
-
-		int numUps = 0;
-		List<BoardUpdate> ups = new List<BoardUpdate>();
-
-        for (int i = -1; i <= 1; i++)
-        {
-            for (int j = -1; j <= 1; j++)
-            {
-                Point check = new Point(x + i, y + j);
-				List<BoardUpdate> tmpUps = new List<BoardUpdate>();
-
-                while (check.X >= 0 && check.Y >= 0 && check.X < 8 && check.Y < 8 && OthelloBoard[check.X, check.Y] != PlayerColor.Empty)
-                {
-                    if (OthelloBoard[check.X, check.Y] == currentPlayer)
-                    {
-						ups.AddRange(tmpUps);
-                        break;
-                    }
-                    else
-                    {
-						tmpUps.Add(new BoardUpdate(check.X, check.Y, currentPlayer));
-                        check = check.Add(new Point(i, j));
-                    }
-                }
-            }
-        }
-
-		foreach (BoardUpdate up in ups)
-		{
-            OthelloBoard[up.loc.X, up.loc.Y] = currentPlayer;
-            Notify(up);
-			numUps++;
-        }
-
-        //flip current player
-        currentPlayer = currentPlayer == PlayerColor.Black ? PlayerColor.White : PlayerColor.Black;
-
-        return numUps;
+		return moves++;
     }
 	
-	public bool LegalMove(int x, int y)
+	public bool LegalMoveForOn(int x, int y, PlayerColor color, PlayerColor[,] board)
 	{
-		if (OthelloBoard[x,y] != PlayerColor.Empty) return false;
+		if (board[x,y] != PlayerColor.Empty) return false;
 
 		//check if it completes line
 		bool[,] dirs = new bool[3, 3];
@@ -174,9 +126,9 @@ public class OthelloModel: IObservable<ModelChange>
 				Point check = new Point(x + i, y + j);
 				bool nextTo = true;
 
-				while (check.X >= 0 && check.Y >= 0 && check.X < 8 && check.Y < 8 && OthelloBoard[check.X, check.Y] != PlayerColor.Empty)
+				while (check.X >= 0 && check.Y >= 0 && check.X < 8 && check.Y < 8 && board[check.X, check.Y] != PlayerColor.Empty)
 				{
-					if (OthelloBoard[check.X, check.Y] == currentPlayer)
+					if (board[check.X, check.Y] == color)
 					{
 						dirs[i + 1, j + 1] = !nextTo;
 						break;
@@ -193,13 +145,75 @@ public class OthelloModel: IObservable<ModelChange>
 		return dirs.HasValue<bool>(true, (x, y) => { return x == y; }) ;
 	}
 
+	public bool LegalMoveFor(int x, int y,  PlayerColor color)
+	{
+		return LegalMoveForOn(x, y, color, this.OthelloBoard);
+	}
+
+	public bool LegalMove(int x, int y)
+	{
+		return LegalMoveFor(x, y, currentPlayer);
+	}
+
+	private int UpdateBoard(int x, int y)
+	{
+        int numUps = 0;
+        List<BoardUpdate> ups = new List<BoardUpdate>();
+
+        for (int i = -1; i <= 1; i++)
+        {
+            for (int j = -1; j <= 1; j++)
+            {
+                Point check = new Point(x + i, y + j);
+                List<BoardUpdate> tmpUps = new List<BoardUpdate>();
+
+                while (check.X >= 0 && check.Y >= 0 && check.X < 8 && check.Y < 8 && OthelloBoard[check.X, check.Y] != PlayerColor.Empty)
+                {
+                    if (OthelloBoard[check.X, check.Y] == currentPlayer)
+                    {
+                        ups.AddRange(tmpUps);
+                        break;
+                    }
+                    else
+                    {
+                        tmpUps.Add(new BoardUpdate(check.X, check.Y, currentPlayer, true));
+                        check = check.Add(new Point(i, j));
+                    }
+                }
+            }
+        }
+
+        foreach (BoardUpdate up in ups)
+        {
+            OthelloBoard[up.loc.X, up.loc.Y] = currentPlayer;
+            Notify(up);
+            numUps++;
+        }
+
+		return numUps;
+    }
+
 	public void SetupBoard()
 	{
 		DoMove(3, 3);
+        currentPlayer = currentPlayer == PlayerColor.Black ? PlayerColor.White : PlayerColor.Black;
         DoMove(3, 4);
+        currentPlayer = currentPlayer == PlayerColor.Black ? PlayerColor.White : PlayerColor.Black;
         DoMove(4, 4);
+        currentPlayer = currentPlayer == PlayerColor.Black ? PlayerColor.White : PlayerColor.Black;
         DoMove(4, 3);
-	}
+        currentPlayer = currentPlayer == PlayerColor.Black ? PlayerColor.White : PlayerColor.Black;
+
+        players = new MiniMaxPlayer[2];
+        if (AI1Level > 0)
+        {
+            players[0] = new MiniMaxPlayer(AI1Level, PlayerColor.Black);
+        }
+        if (AI2Level > 0)
+        {
+            players[1] = new MiniMaxPlayer(AI2Level, PlayerColor.White);
+        }
+    }
 
 	public void SetAiLevels(int AI1Level, int AI2Level)
 	{
@@ -246,9 +260,10 @@ public class OthelloModel: IObservable<ModelChange>
 	{
 		public Point loc { get; private set;  }
 		public PlayerColor c { get; private set; }
-		
-		
-		public BoardUpdate()
+		public bool isFlip { get; private set; }
+
+
+        public BoardUpdate()
 		{
 			Type = ChangeType.BoardUpdate;
 		}
@@ -258,7 +273,14 @@ public class OthelloModel: IObservable<ModelChange>
 			this.loc = new Point(x, y);
 			this.c = c;
 		}
-	}
+
+        public BoardUpdate(int x, int y, OthelloModel.PlayerColor c, bool flip) : this()
+        {
+            this.loc = new Point(x, y);
+            this.c = c;
+			this.isFlip = flip;
+        }
+    }
 
 	public class GameUpdate : ModelChange
 	{

@@ -86,6 +86,12 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
             2f,
             value.Y + .5f
             );
+
+        this.TransparentGamePiece.transform.localRotation = Quaternion.Euler(
+            (this.NextGamePiece + 1) * 180,
+            0,
+            0
+            );
     }
 
 
@@ -175,8 +181,6 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
 
     private IEnumerator SpawnBoardAfterTimer()
     {
-        yield return new WaitForSeconds(1);
-
         for (int i = 0; i < 64; i++)
         {
             float x = i % 2 == 1 ? RightGamePieceStorage.gameObject.transform.position.x : LeftGamePieceStorage.gameObject.transform.position.x;
@@ -191,7 +195,7 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
 
         OthelloModel.Instance.Subscribe(this);
 
-        yield return new WaitForSeconds(6);
+        yield return new WaitForSeconds(3);
 
         PrepNextPiece();
 
@@ -255,9 +259,9 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
 
         this.TransparentGamePiece = Instantiate(MoveFollowPiece);
         Color c = this.TransparentGamePiece.GetComponentInChildren<Renderer>().material.color;
-        //this.TransparentGamePiece.GetComponent<Renderer>().material.color = new Color(c.r, c.g, c.b, .5f);
+        this.TransparentGamePiece.GetComponent<Renderer>().material.color = new Color(c.r, c.g, c.b, .2f);
         this.TransparentGamePiece.GetComponent<Rigidbody>().isKinematic = true;
-        this.TransparentGamePiece.GetComponent <Collider>().enabled = false;
+        this.TransparentGamePiece.GetComponent<Collider>().enabled = false;
     }
 
     // Update is called once per frame
