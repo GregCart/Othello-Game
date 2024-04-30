@@ -121,7 +121,7 @@ public static class Helpers
         return (tup.w, tup.x, tup.y, z);
     }
 
-    public static void Print<T>(this T[,] mat) where T :  int, IComparable, IConvertible, IFormattable
+    public static void Print<T>(this T[,] mat) where T : Enum, IComparable, IConvertible, IFormattable
     {
         string ret = "[\n";
         for (int r = 0; r < mat.Rank - 1; r += 2)
@@ -133,14 +133,14 @@ public static class Helpers
         Debug.Log(ret);
     }
 
-    private static string PrintRecursive<T>(this T[,] innerMat, int rank, string ret) where T : struct, IComparable, IConvertible, IFormattable
+    private static string PrintRecursive<T>(this T[,] innerMat, int rank, string ret) where T : Enum, IComparable, IConvertible, IFormattable
     {
         ret += "\t[\n";
         for (int i = innerMat.GetLowerBound(rank); i < innerMat.GetLength(rank); i++)
         {
             for (int j = innerMat.GetLowerBound(rank); j < innerMat.GetLength(1); j++)
             {
-                ret += ((Enum)((int)innerMat[i, j])).DisplayName() + " ";
+                ret += innerMat[i, j].DisplayName() + " ";
             }
             ret += "\n";
         }
