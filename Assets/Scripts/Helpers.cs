@@ -140,7 +140,7 @@ public static class Helpers
         {
             for (int j = innerMat.GetLowerBound(rank); j < innerMat.GetLength(1); j++)
             {
-                ret += innerMat[i, j].DisplayName() + " ";
+                ret += innerMat[i, j].ToString() + " ";
             }
             ret += "\n";
         }
