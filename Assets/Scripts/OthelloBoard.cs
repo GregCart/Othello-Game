@@ -199,6 +199,9 @@ public class OthelloBoard : MonoBehaviour, IObserver<ModelChange>, IObserver<Poi
 
         PrepNextPiece();
 
+        OthelloModel.Instance.ResetBoard();
+        Debug.Log(OthelloModel.Instance.OthelloBoard.ToPrintString());
+        Console.WriteLine(OthelloModel.Instance.OthelloBoard.ToPrintString());
         OthelloModel.Instance.SetupBoard();
 
         this.gameObject.GetComponent<BoardInput>().Subscribe(this);

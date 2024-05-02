@@ -46,14 +46,14 @@ public class MiniMaxPlayer : IObserver<ModelChange>
             if (!b.isFlip && (PlayerColor)(((int)b.c + 1) % 2) == me)
             //if (b.c == me)
             {
-                //CalculateMiniMaxMove();
+                CalculateMiniMaxMove();
             }
         }
     }
 
     private void CalculateMiniMaxMove()
     {
-        model.OthelloBoard.Print();
+        Debug.Log(model.OthelloBoard.ToPrintString());
         (int, Point, int) ret = RecursiveMiniMax(model.OthelloBoard, new Point(0, 0), 1);
         Debug.Log(ret);
     }
@@ -103,7 +103,7 @@ public class MiniMaxPlayer : IObserver<ModelChange>
 
         foreach (var state in states)
         {
-            if (state.Item1 < bestState.Item1)
+            if (state.Item1 > 0 && state.Item1 < bestState.Item1)
             {
                 bestState = state;
             } else if (state.Item4 == me && state.Item3 >= bestState.Item3)

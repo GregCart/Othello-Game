@@ -30,8 +30,6 @@ public class OthelloMainMenu : MonoBehaviour
 	{
 		//set parameters in singleton game object
 		OthelloModel.Instance.SetAiLevels((int)player1.value, (int)player2.value);
-
-		OthelloModel.Instance.ResetBoard();
 		
 		SceneManager.LoadScene("Othello Game");
 	}

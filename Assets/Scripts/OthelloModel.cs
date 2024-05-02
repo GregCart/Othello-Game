@@ -4,6 +4,8 @@ using System.Drawing;
 using UnityEngine;
 using static OthelloModel;
 using Debug = UnityEngine.Debug;
+using static Helpers;
+using System.Linq;
 
 
 public class OthelloModel: IObservable<ModelChange>
@@ -54,7 +56,7 @@ public class OthelloModel: IObservable<ModelChange>
             for (int x = 0; x < 8; x++)
 			{
 				OthelloBoard[x, y] = PlayerColor.Empty;
-				Notify(new BoardUpdate(x, y, PlayerColor.Empty));
+				Notify(new BoardUpdate(true, x, y, PlayerColor.Empty));
 			}
 		}
 	}
@@ -68,7 +70,7 @@ public class OthelloModel: IObservable<ModelChange>
 	
 	private void Notify(ModelChange change)
 	{
-		foreach (IObserver<ModelChange> observer in Observers)
+		foreach (IObserver<ModelChange> observer in Observers.ToList())
 		{
 			observer.OnNext(change);
 		}
@@ -77,7 +79,7 @@ public class OthelloModel: IObservable<ModelChange>
     public bool MakeMove(int x, int y) 
 	{
 		//Debug.Log("\tTry " + x + ", " + y);
-
+		Debug.Log(OthelloBoard.ToPrintString());
 		if (!LegalMove(x, y)) return false;
 		
 		DoMove(x, y);
@@ -108,7 +110,7 @@ public class OthelloModel: IObservable<ModelChange>
 	private int DoMove(int x, int y)
 	{
         OthelloBoard[x, y] = currentPlayer;
-        Notify(new BoardUpdate(x, y, currentPlayer));
+        Notify(new BoardUpdate(false, x, y, currentPlayer));
 		return moves++;
     }
 	
@@ -263,18 +265,18 @@ public class OthelloModel: IObservable<ModelChange>
 		public bool isFlip { get; private set; }
 
 
-        public BoardUpdate()
+        public BoardUpdate(bool isReset)
 		{
-			Type = ChangeType.BoardUpdate;
+			Type = isReset ? ChangeType.BoardReset : ChangeType.BoardUpdate;
 		}
-		
-		public BoardUpdate(int x, int y, OthelloModel.PlayerColor c): this()
+
+		public BoardUpdate(bool isReset, int x, int y, OthelloModel.PlayerColor c): this(isReset)
 		{
 			this.loc = new Point(x, y);
 			this.c = c;
 		}
 
-        public BoardUpdate(int x, int y, OthelloModel.PlayerColor c, bool flip) : this()
+        public BoardUpdate(int x, int y, OthelloModel.PlayerColor c, bool flip) : this(false)
         {
             this.loc = new Point(x, y);
             this.c = c;
